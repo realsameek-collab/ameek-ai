@@ -1,0 +1,354 @@
+@import "tailwindcss";
+
+@theme {
+  --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-ambient-sm: 0 1px 2px rgb(0 0 0 / 0.30), 0 2px 6px rgb(0 0 0 / 0.20);
+  --shadow-ambient: 0 1px 2px rgb(0 0 0 / 0.28), 0 6px 16px rgb(0 0 0 / 0.26),
+                    0 18px 36px -12px rgb(0 0 0 / 0.34);
+  --shadow-ambient-lg: 0 2px 4px rgb(0 0 0 / 0.30), 0 12px 28px rgb(0 0 0 / 0.30),
+                       0 32px 64px -16px rgb(0 0 0 / 0.42);
+
+  --animate-skeleton: skeleton 1.6s ease-in-out infinite;
+  --animate-rise: rise 220ms var(--ease-premium) both;
+  --animate-sheet-up: sheet-up 260ms var(--ease-premium) both;
+  --animate-fade-in: fade-in 200ms var(--ease-premium) both;
+  --animate-panel-in: panel-in 200ms var(--ease-premium) both;
+}
+
+/* floating chat panel - drifts out from the rail it is anchored to */
+@keyframes panel-in {
+  from { opacity: 0; transform: translateX(-6px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes skeleton {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(4px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@utility tap-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+@utility focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 1px rgb(99 102 241 / 0.55), 0 0 0 4px rgb(99 102 241 / 0.16);
+}
+
+@utility glass {
+  background-color: rgb(13 15 20 / 0.72);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgb(99 102 241 / 0.35);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* react-markdown output - tailwind preflight strips these margins */
+@layer components {
+  .md-body > :first-child { margin-top: 0; }
+  .md-body > :last-child { margin-bottom: 0; }
+
+  .md-body p { margin: 0.6rem 0; line-height: 1.7; }
+  .md-body h1, .md-body h2, .md-body h3, .md-body h4 {
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 1.25rem 0 0.55rem;
+    color: rgb(241 245 249);
+  }
+  .md-body h1 { font-size: 1.2rem; }
+  .md-body h2 { font-size: 1.08rem; }
+  .md-body h3 { font-size: 0.98rem; }
+  .md-body h4 { font-size: 0.92rem; }
+
+  .md-body ul, .md-body ol { margin: 0.6rem 0; padding-left: 1.25rem; }
+  .md-body ul { list-style: disc; }
+  .md-body ol { list-style: decimal; }
+  .md-body li { margin: 0.28rem 0; line-height: 1.65; }
+  .md-body li::marker { color: rgb(100 116 139); }
+
+  .md-body strong { font-weight: 600; color: rgb(241 245 249); }
+  .md-body a { color: rgb(129 140 248); text-decoration: underline; text-underline-offset: 2px; }
+  .md-body a:hover { color: rgb(165 180 252); }
+
+  .md-body blockquote {
+    margin: 0.75rem 0;
+    padding: 0.15rem 0 0.15rem 0.85rem;
+    border-left: 2px solid rgb(99 102 241 / 0.45);
+    color: rgb(148 163 184);
+  }
+
+  .md-body img {
+    max-width: min(100%, 420px);
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  .md-body hr { margin: 1rem 0; border-color: rgb(255 255 255 / 0.08); }
+
+  .md-body table {
+    width: 100%;
+    margin: 0.75rem 0;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    display: block;
+    overflow-x: auto;
+  }
+  .md-body th, .md-body td {
+    border: 1px solid rgb(255 255 255 / 0.08);
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+  }
+  .md-body th { background: rgb(255 255 255 / 0.03); font-weight: 600; color: rgb(226 232 240); }
+}
+
+/* syntax tokens for rehype-highlight - kept in the app's indigo/violet family */
+@layer components {
+  .hljs-comment, .hljs-quote { color: rgb(100 116 139); font-style: italic; }
+  .hljs-keyword, .hljs-selector-tag, .hljs-literal,
+  .hljs-type, .hljs-built_in, .hljs-meta { color: rgb(196 181 253); }
+  .hljs-string, .hljs-regexp, .hljs-symbol, .hljs-addition { color: rgb(134 239 172); }
+  .hljs-number { color: rgb(165 180 252); }
+  .hljs-title, .hljs-title.function_, .hljs-section { color: rgb(125 211 252); }
+  .hljs-attr, .hljs-attribute, .hljs-property, .hljs-variable { color: rgb(147 197 253); }
+  .hljs-params { color: rgb(226 232 240); }
+  .hljs-deletion { color: rgb(252 165 165); }
+  .hljs-emphasis { font-style: italic; }
+  .hljs-strong { font-weight: 600; }
+}
+
+/* mobile + tablet launch splash - desktop never shows it */
+@layer components {
+  .splash-only { display: none; }
+
+  @media (max-width: 1023.98px), (pointer: coarse) {
+    .splash-only { display: flex; }
+  }
+
+  .splash-mark {
+    width: clamp(76px, 21vw, 116px);
+    height: clamp(76px, 21vw, 116px);
+    overflow: visible;
+  }
+
+  .splash-stroke {
+    fill: none;
+    stroke: #7c3aed;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: splash-draw 480ms var(--ease-premium) forwards;
+  }
+  .splash-stroke-2 { animation-delay: 110ms; }
+
+  .splash-node {
+    fill: #a78bfa;
+    opacity: 0;
+    transform-origin: 32px 40px;
+    animation: splash-core 340ms var(--ease-premium) 520ms forwards;
+  }
+
+  .splash-word {
+    margin-top: clamp(18px, 4vh, 28px);
+    font-size: clamp(0.82rem, 3.4vw, 0.95rem);
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    color: #cbd5e1;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: splash-word-in 310ms var(--ease-premium) 640ms forwards;
+  }
+}
+
+@keyframes splash-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes splash-core {
+  0%   { opacity: 0; transform: scale(0.4); }
+  60%  { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splash-word-in {
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-stroke {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .splash-node,
+  .splash-word {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   assistant thinking state
+
+   pure css so the indicator costs no react renders while it runs.
+   only opacity and transform are animated, both compositor friendly.
+   --------------------------------------------------------------- */
+
+.thinking-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  /* resting opacity - this is what shows when motion is reduced */
+  opacity: 0.5;
+  animation: thinking-dot 1.4s var(--ease-premium) infinite;
+}
+
+.thinking-dot:nth-child(2) { animation-delay: 160ms; }
+.thinking-dot:nth-child(3) { animation-delay: 320ms; }
+
+/* a drift, not a bounce - 1.5px of travel reads as breathing, not typing */
+@keyframes thinking-dot {
+  0%, 60%, 100% { opacity: 0.28; transform: translateY(0); }
+  30%           { opacity: 0.95; transform: translateY(-1.5px); }
+}
+
+.thinking-mark {
+  animation: thinking-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes thinking-glow {
+  0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 0 rgb(99 102 241 / 0)); }
+  50%      { opacity: 1;   filter: drop-shadow(0 0 4px rgb(99 102 241 / 0.45)); }
+}
+
+/* ---------------------------------------------------------------
+   chat row hover dots
+
+   the row icon swaps to three drifting dots while the pointer is over
+   it. css only, so hovering a long list costs no react renders.
+   --------------------------------------------------------------- */
+
+.row-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.55;
+  animation: row-dot 1.2s var(--ease-premium) infinite;
+}
+
+.row-dot:nth-child(2) { animation-delay: 140ms; }
+.row-dot:nth-child(3) { animation-delay: 280ms; }
+
+@keyframes row-dot {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30%           { opacity: 1;    transform: translateY(-1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* the swap still happens, it just does not animate */
+  .row-dot {
+    animation: none;
+    opacity: 0.8;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-dot,
+  .thinking-mark {
+    animation: none;
+    opacity: 0.75;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   mobile empty state
+
+   height cannot be animated from 100% to 0 in any useful way, so the
+   two properties are sequenced instead of interpolated: the fade runs
+   for 200ms, then the box gives up its space in a single 1ms step.
+   restoring reverses the order - space first, then the fade - so the
+   content always has somewhere to appear.
+
+   the collapse itself is driven by a class, never by display:none,
+   so both directions animate.
+   --------------------------------------------------------------- */
+
+.empty-state {
+  height: 100%;
+  min-height: 250px;
+  opacity: 1;
+  transform: none;
+  transition:
+    height 1ms linear,
+    min-height 1ms linear,
+    opacity 200ms var(--ease-premium) 1ms,
+    transform 200ms var(--ease-premium) 1ms;
+}
+
+.empty-state.is-collapsed {
+  height: 0;
+  min-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    opacity 200ms var(--ease-premium),
+    transform 200ms var(--ease-premium),
+    height 1ms linear 200ms,
+    min-height 1ms linear 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* the global rule zeroes durations but not delays - without this the
+     space would still wait 200ms to come back */
+  .empty-state,
+  .empty-state.is-collapsed {
+    transition-delay: 0ms !important;
+  }
+}

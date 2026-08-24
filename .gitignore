@@ -1,0 +1,76 @@
+# Dependencies
+node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Temporary files
+temp/
+tmp/
+
+# Uploads and generated files
+uploads/
+generated/
+
+# IDE
+.vscode/
+.idea/
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Firebase credentials
+serviceAccountKey.json
+firebase-adminsdk*.json
+*-firebase-adminsdk-*.json
+
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+
+# Test / coverage
+coverage/
+
+# Cache
+.cache/
+.eslintcache
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local databases
+*.sqlite
+*.sqlite3
+
+# Backup archives
+*.zip
+*.tar
+*.tar.gz
+
+# Docker local override
+docker-compose.override.yml
+
+# Temporary FUSE files
+.fuse_hidden*
+
+# Firebase Admin credentials
+serviceAccountKey.json
+**/serviceAccountKey.json
