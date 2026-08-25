@@ -1,3 +1,9 @@
+// MUST be first: ESM evaluates every import before this module's body runs.
+// This covers the normal case (process started from the service directory).
+// The explicit-path dotenv.config() below stays as a fallback for when the
+// working directory is not this folder.
+import "dotenv/config";
+
 import express from "express";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";

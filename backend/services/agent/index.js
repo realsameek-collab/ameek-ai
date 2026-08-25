@@ -1,9 +1,12 @@
+// MUST be first: ESM evaluates every import before this module's body runs,
+// so a later dotenv.config() is too late for anything that reads process.env
+// at import time (e.g. shared/redis/redis.js building its client).
+import "dotenv/config"
+
 import express from "express"
-import dotenv from "dotenv"
 import cors from "cors"
 import connectDb from "./config/db.js"
 import router from "./routes/agent.route.js"   // express router (NOT graph/router.js)
-dotenv.config()
 
 const port = process.env.PORT
 
@@ -19,13 +22,6 @@ app.get("/", (req, res) => {
     res.json({ message: "hello from agent" })
 })
 app.use("/", router)
-app.use((err,req,res,next)=>{
-    console.log(err)
-    if(err.status){
-        return res.status(err.status).json(err.data)
-    }
-    return res.status(500).json({message:`agent error ${error}`})
-})
 // multer rejections (size limit, blocked type) otherwise surface as a blank
 // 500 html page, which the frontend can only show as "something went wrong"
 app.use((err, req, res, next) => {

@@ -1,10 +1,11 @@
+// MUST be first: ESM evaluates every import before this module's body runs.
+// protect -> shared/redis/redis.js reads process.env.REDIS_URL at import time,
+// so the old dotenv.config() on line 7 ran far too late to matter.
+import "dotenv/config";
+
 import express from "express";
-import dotenv from "dotenv";
 import proxy from "express-http-proxy";
 import { proxyWithHeader } from "./utils/proxyWithHeader.js";
-
-
-dotenv.config();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { getCurrentUser } from "./controllers/user.controller.js";

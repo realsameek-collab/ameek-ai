@@ -1,8 +1,10 @@
+// MUST be first: ESM evaluates every import before this module's body runs,
+// so config/db.js was reading process.env.MONGODB_URI before dotenv had run
+import "dotenv/config"
+
 import express from "express"
-import dotenv from "dotenv"
 import connectDb from "./config/db.js"
 import router from "./routes/chat.routes.js"
-dotenv.config()
 
 const port = process.env.PORT
 
