@@ -34,7 +34,13 @@ function MessageList({ onSuggestion, composerFocused = false }) {
 
   const scrollRef = useRef(null)
   const spacerRef = useRef(null)
-  const anchorRef = useRef(null)
+
+  // the id of the message to keep pinned, NOT the node. holding a node broke
+  // as soon as react replaced it - when the server history swaps the
+  // optimistic `local-...` id for a real one, the old node is detached and
+  // getBoundingClientRect() on it returns zeros, which collapsed the spacer
+  // and let the user's message scroll away.
+  const anchorIdRef = useRef(null)
 
   // auto-follow is on. a ref because the scroll handler reads it every frame
   // and must never re-render just to record where the user is.
@@ -59,12 +65,27 @@ function MessageList({ onSuggestion, composerFocused = false }) {
      the same position, following the reply and pinning the question
      are not competing behaviours.
      ------------------------------------------------------------- */
+  // resolved from the live DOM every time, so a re-render or an id swap can
+  // never leave us measuring a detached node. if the exact id is gone, the
+  // newest user message is the same turn and works just as well.
+  const resolveAnchor = useCallback(() => {
+    const el = scrollRef.current
+    if (!el || !anchorIdRef.current) return null
+
+    const byId = el.querySelector(`[data-mid="${CSS.escape(anchorIdRef.current)}"]`)
+    if (byId?.isConnected) return byId
+
+    const userRows = el.querySelectorAll('[data-role="user"]')
+    const last = userRows[userRows.length - 1]
+    return last?.isConnected ? last : null
+  }, [])
+
   const anchorOffset = useCallback(() => {
     const el = scrollRef.current
-    const anchor = anchorRef.current
+    const anchor = resolveAnchor()
     if (!el || !anchor) return null
     return anchor.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop
-  }, [])
+  }, [resolveAnchor])
 
   const updateSpacer = useCallback(() => {
     const el = scrollRef.current
@@ -125,7 +146,7 @@ function MessageList({ onSuggestion, composerFocused = false }) {
 
   // where "following" points: the current turn if there is one, else the end
   const followCurrent = useCallback((behavior = scrollBehavior()) => {
-    if (anchorRef.current) scrollToAnchor(behavior)
+    if (anchorIdRef.current) scrollToAnchor(behavior)
     else scrollToLatest(behavior)
   }, [scrollToAnchor, scrollToLatest])
 
@@ -184,7 +205,7 @@ function MessageList({ onSuggestion, composerFocused = false }) {
 
     if (isSend) {
       // a freshly sent message outranks wherever the user was reading
-      anchorRef.current = el.querySelector(`[data-mid="${String(last._id)}"]`)
+      anchorIdRef.current = String(last._id)
       updateSpacer()
       scrollToAnchor()
       return
@@ -204,7 +225,7 @@ function MessageList({ onSuggestion, composerFocused = false }) {
     const el = scrollRef.current
     if (!el) return
 
-    anchorRef.current = null
+    anchorIdRef.current = null
     if (spacerRef.current) spacerRef.current.style.height = '0px'
     clearTimeout(settleTimer.current)
     follow.current = true
@@ -288,7 +309,7 @@ function MessageList({ onSuggestion, composerFocused = false }) {
         ) : (
          <div>
           {messages?.map((msg,i)=>(
-            <div key={msg?._id ?? i} data-mid={msg?._id ?? ''}>
+            <div key={msg?._id ?? i} data-mid={msg?._id ?? ''} data-role={msg?.role ?? ''}>
               <MessageBubble role={msg?.role} content={msg?.content} images={msg?.images || []}/>
             </div>
           ))}
