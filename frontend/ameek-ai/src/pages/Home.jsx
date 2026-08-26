@@ -19,6 +19,14 @@ function Home() {
       const { data } = await api.post('/auth/login', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      // cookie fallback: mobile browsers block the cross-domain session
+      // cookie, so keep the id and let the axios interceptor send it as
+      // Authorization: Bearer on every later request
+      if (data?.sessionId) {
+        localStorage.setItem("sessionId", data.sessionId);
+      }
+
       return data?.user || null;
     } catch (error) {
       console.log('Auth backend login error ignored:', error?.message || error);

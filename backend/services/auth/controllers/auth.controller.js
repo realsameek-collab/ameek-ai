@@ -49,7 +49,10 @@ const cookieOptions = {
 
           res.cookie("session", sessionId, cookieOptions);
 
-          return res.status(200).json({message:"Login successful",user})
+          // sessionId is also returned in the body so clients that can't
+          // rely on cross-domain cookies (e.g. some mobile browsers) can
+          // store it themselves and send it back as a Bearer token.
+          return res.status(200).json({message:"Login successful",user,sessionId})
 
        }catch(error){
             console.error('Auth login error:', error);
@@ -62,7 +65,11 @@ const cookieOptions = {
 
             try{
 
-             const sessionId = req.cookies?.session;
+             let sessionId = req.cookies?.session;
+             const authHeader = req.headers?.authorization || req.headers?.Authorization;
+             if (!sessionId && authHeader && authHeader.startsWith('Bearer ')) {
+               sessionId = authHeader.split(' ')[1];
+             }
              await redis.del(`session-${sessionId}`);
              res.clearCookie("session");
              return res.status(200).json({message:"Logout successful"})

@@ -3,7 +3,15 @@ import redis from "../../shared/redis/redis.js"
 const protect = async(req,res,next)=>{
 
     try {
-        const sessionId = req.cookies?.session
+        // Prefer Authorization header (works cross-domain on mobile browsers
+        // that block third-party cookies); fall back to cookie for desktop.
+        let sessionId = req.cookies?.session
+
+        const authHeader = req.headers?.authorization || req.headers?.Authorization
+        if (!sessionId && authHeader && authHeader.startsWith('Bearer ')) {
+            sessionId = authHeader.split(' ')[1]
+        }
+
         if(!sessionId){
 
             return res.status(401).json({message:'unauthorized'})

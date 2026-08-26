@@ -7,6 +7,10 @@ async function logOut() {
     console.log(data)
   } catch (error) {
     console.log(error)
+  } finally {
+    // must run even if the request fails, otherwise a stale token keeps
+    // getting sent as Authorization and the user appears logged in again
+    localStorage.removeItem("sessionId")
   }
 }
 
