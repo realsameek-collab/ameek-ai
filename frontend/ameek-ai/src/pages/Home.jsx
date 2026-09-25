@@ -34,7 +34,12 @@ function Home() {
   const [loginError, setLoginError] = React.useState('');
   console.log('Redux user state:', user);
 
+  // throws on failure. this used to swallow the error and log the user in
+  // with only their google profile - with no backend session, so every chat
+  // request then failed with "session expired" and hid the real cause.
   const handleLogin = async (token) => {
+    // a stale id from an earlier login must not outlive a failed new one
+    localStorage.removeItem("sessionId");
     try {
       const { data } = await api.post('/auth/login', {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -46,11 +51,19 @@ function Home() {
       if (data?.sessionId) {
         localStorage.setItem("sessionId", data.sessionId);
       }
+      if (!data?.user) throw new Error('the server did not return a user');
 
-      return data?.user || null;
+      return data.user;
     } catch (error) {
-      console.log('Auth backend login error ignored:', error?.message || error);
-      return null;
+      const status = error?.response?.status;
+      const reason = error?.response?.data?.error || error?.response?.data?.message || error?.message;
+      const serverError = new Error(
+        status
+          ? `Server login failed (${status}): ${reason}`
+          : 'Could not reach the server. Check that the gateway is running and FRONTEND_URL allows this site.'
+      );
+      serverError.code = 'server-login';
+      throw serverError;
     }
   };
 
@@ -59,24 +72,13 @@ function Home() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const token = await result.user.getIdToken(true);
-      console.log('Firebase token:', token);
 
       const backendUser = await handleLogin(token);
-      const fallbackUser = {
-        name: result.user.displayName,
-        email: result.user.email,
-        avatar: result.user.photoURL,
-      };
-
-      const activeUser = backendUser || fallbackUser;
-      if (activeUser) {
-        dispatch(setUserData(activeUser));
-      }
-
-      console.log('Signed in, token sent to backend', activeUser);
+      // the user model has no avatar field, so the google photo fills it
+      dispatch(setUserData({ ...backendUser, avatar: backendUser.avatar || result.user.photoURL }));
     } catch (error) {
-      console.error('Google login error:', error?.code, error?.message);
-      setLoginError(loginErrorText(error));
+      console.error('Login error:', error?.code, error?.message);
+      setLoginError(error?.code === 'server-login' ? error.message : loginErrorText(error));
     }
   }
 

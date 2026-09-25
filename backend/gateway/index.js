@@ -5,7 +5,7 @@ import "dotenv/config";
 
 import express from "express";
 import proxy from "express-http-proxy";
-import { proxyWithHeader } from "./utils/proxyWithHeader.js";
+import { proxyWithHeader, proxyErrorHandler } from "./utils/proxyWithHeader.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { getCurrentUser } from "./controllers/user.controller.js";
@@ -14,8 +14,17 @@ import morgan from "morgan";
 
 const port = process.env.PORT || 8000;
 const app = express();
+// comma separated, so more than one deployed frontend can be allowed. a
+// browser Origin never has a trailing slash, so one pasted into FRONTEND_URL
+// used to make the match fail and every response got blocked by CORS.
+const allowedOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+console.log("CORS allowed origins:", allowedOrigins);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(morgan("dev"))
@@ -36,10 +45,11 @@ app.use('/auth', proxy(process.env.AUTH_SERVICE, {
       // ignore
     }
     return headers;
-  }
+  },
+  proxyErrorHandler: proxyErrorHandler("auth", process.env.AUTH_SERVICE)
 }));
-app.use("/api/chat",protect,proxyWithHeader(process.env.CHAT_SERVICE))
-app.use("/api/agent",protect,proxyWithHeader(process.env.AGENT_SERVICE))
+app.use("/api/chat",protect,proxyWithHeader(process.env.CHAT_SERVICE, "chat"))
+app.use("/api/agent",protect,proxyWithHeader(process.env.AGENT_SERVICE, "agent"))
 app.get("/api/me", protect, getCurrentUser)
 
 
