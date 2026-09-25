@@ -1,5 +1,85 @@
+# Whole AmeekAI backend as one stack: docker compose up -d --build
+# The .env files keep localhost URLs for `npm run dev`; the `environment:`
+# entries below override them with compose service names, since inside a
+# container localhost is the container itself.
+name: backend
+
 services:
   redis:
-    image: redis
+    image: redis:7-alpine
+    restart: always
     ports:
-      - 6379:6379
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  auth:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    image: ameek-auth
+    restart: always
+    env_file: services/auth/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./services/auth/serviceAccountKey.json:/app/services/auth/serviceAccountKey.json:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  chat:
+    build:
+      context: .
+      dockerfile: services/chat/Dockerfile
+    image: ameek-chat
+    restart: always
+    env_file: services/chat/.env
+
+  agent:
+    build:
+      context: .
+      dockerfile: services/agent/Dockerfile
+    image: ameek-agent
+    restart: always
+    env_file: services/agent/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      CHAT_SERVICE: http://chat:8002
+    depends_on:
+      redis:
+        condition: service_healthy
+      chat:
+        condition: service_started
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    image: ameek-gateway
+    restart: always
+    env_file: gateway/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      AUTH_SERVICE: http://auth:8001
+      CHAT_SERVICE: http://chat:8002
+      AGENT_SERVICE: http://agent:8003
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth:
+        condition: service_started
+      chat:
+        condition: service_started
+      agent:
+        condition: service_started
+
+volumes:
+  redis-data:

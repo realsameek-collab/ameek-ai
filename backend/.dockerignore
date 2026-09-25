@@ -1,0 +1,9 @@
+# build context is backend/, so the per-service .dockerignore files are never read
+**/node_modules
+**/.env
+**/.env.*
+**/serviceAccountKey*.json
+**/temp
+**/.fuse_hidden*
+**/Dockerfile
+docker-compose.yml
