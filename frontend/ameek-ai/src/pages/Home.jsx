@@ -9,9 +9,29 @@ import SideBar from '../components/SideBar';
 import ChatArea from '../components/ChatArea';
 import Artifact from '../components/Artifact';
 
+// a failed popup used to be swallowed, so the window just flashed and closed
+// with no hint why. the code is kept in the text so it can be looked up.
+const loginErrorText = (error) => {
+  switch (error?.code) {
+    case 'auth/unauthorized-domain':
+      return `This domain (${window.location.hostname}) is not authorized in Firebase. Add it under Authentication → Settings → Authorized domains.`;
+    case 'auth/invalid-api-key':
+    case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+      return 'Firebase API key is missing or invalid. Check VITE_FIREBASE_API_KEY and redeploy.';
+    case 'auth/popup-blocked':
+      return 'The browser blocked the sign-in popup. Allow popups for this site and try again.';
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return 'Sign-in window was closed before finishing.';
+    default:
+      return `Sign-in failed (${error?.code || error?.message || 'unknown error'}).`;
+  }
+};
+
 function Home() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.userData);
+  const [loginError, setLoginError] = React.useState('');
   console.log('Redux user state:', user);
 
   const handleLogin = async (token) => {
@@ -35,6 +55,7 @@ function Home() {
   };
 
   const googleLogin = async () => {
+    setLoginError('');
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const token = await result.user.getIdToken(true);
@@ -54,7 +75,8 @@ function Home() {
 
       console.log('Signed in, token sent to backend', activeUser);
     } catch (error) {
-      console.log('Google login error ignored:', error?.message || error);
+      console.error('Google login error:', error?.code, error?.message);
+      setLoginError(loginErrorText(error));
     }
   }
 
@@ -89,6 +111,12 @@ function Home() {
               <FcGoogle size={15} className='text-white' />
               Continue With Google
             </button>
+
+            {loginError && (
+              <p className='text-[12px] leading-snug text-red-400'>
+                {loginError}
+              </p>
+            )}
 
           </div>
 
